@@ -140,25 +140,40 @@ const htaccessContent = `<IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # Pass Authorization header to PHP
+  # 1. Pass Authorization header to PHP
   RewriteCond %{HTTP:Authorization} ^(.*)
   RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 
-  # Direct API routing
+  # 2. Block Malicious Automated Attack Scanners & Known Exploitation Bots
+  RewriteCond %{HTTP_USER_AGENT} (sqlmap|nikto|wpscan|dirbuster|acunetix|masscan|zgrab|nmap|morfeus|nessus) [NC]
+  RewriteRule .* - [F,L]
+
+  # 3. Block Malicious Exploitation Patterns (SQLi, Directory Traversal, RCE)
+  RewriteCond %{QUERY_STRING} (eval\(|base64_decode|exec\(|passthru\(|system\(|shell_exec|union.*select|concat\(|benchmark\(|sleep\() [NC,OR]
+  RewriteCond %{QUERY_STRING} (\.\./|\.\.\\|proc/self/environ|etc/passwd) [NC]
+  RewriteRule .* - [F,L]
+
+  # 4. Block access to hidden and sensitive files
+  RewriteRule (^|/)\.(git|env|htaccess|htpasswd|sql|log|bak|yml|yaml|ini|lock) - [F,L]
+
+  # 5. Direct API routing
   RewriteRule ^api/about-video/?$ /api/about-video.php [L,QSA]
   RewriteRule ^api/auth/?$ /api/auth.php [L,QSA]
 
-  # Never rewrite physical files or directories
+  # 6. Never rewrite physical files or directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Allow direct access to uploads directory
+  # 7. Allow direct access to uploads directory
   RewriteRule ^uploads/ - [L]
 
-  # SPA fallback for all other routes
+  # 8. SPA fallback for all other routes
   RewriteRule ^ index.html [L]
 </IfModule>
+
+# Request body size limit (50MB: protects against buffer exhaustion / large upload DoS)
+LimitRequestBody 52428800
 
 <IfModule mod_mime.c>
   AddType video/mp4 .mp4
@@ -169,7 +184,12 @@ const htaccessContent = `<IfModule mod_rewrite.c>
 
 <IfModule mod_headers.c>
   Header set Accept-Ranges bytes
-  Header set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 </IfModule>
 `;
 

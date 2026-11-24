@@ -97,6 +97,20 @@ CREATE TABLE IF NOT EXISTS `user_permissions` (
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY `uk_user_module` (`user_id`, `module_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `security_rate_limits` (
+  `id` VARCHAR(64) NOT NULL PRIMARY KEY,
+  `action` VARCHAR(50) NOT NULL,
+  `ip_address` VARCHAR(45) NOT NULL,
+  `identifier` VARCHAR(255) NOT NULL DEFAULT '',
+  `hits` INT NOT NULL DEFAULT 1,
+  `first_hit` INT NOT NULL,
+  `last_hit` INT NOT NULL,
+  `blocked_until` INT NOT NULL DEFAULT 0,
+  INDEX (`action`, `ip_address`),
+  INDEX (`action`, `identifier`),
+  INDEX (`blocked_until`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ");
 
 // Auto-seed initial admin accounts if empty
@@ -135,6 +149,79 @@ function getBearerToken() {
     return $_GET['token'] ?? ($_POST['token'] ?? null);
 }
 
+function getClientIp() {
+    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) return trim($_SERVER['HTTP_CF_CONNECTING_IP']);
+    if (!empty($_SERVER['HTTP_X_REAL_IP'])) return trim($_SERVER['HTTP_X_REAL_IP']);
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        return trim($ips[0]);
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+}
+
+function checkRateLimit($pdo, $action, $identifier, $maxHits, $windowSeconds, $blockDurationSeconds) {
+    if (!$pdo) return;
+    $now = time();
+    $key = hash('sha256', $action . ':' . strtolower(trim($identifier)));
+    $ip = getClientIp();
+
+    try {
+        $stmt = $pdo->prepare("SELECT hits, first_hit, blocked_until FROM security_rate_limits WHERE id = ?");
+        $stmt->execute([$key]);
+        $record = $stmt->fetch();
+
+        if ($record) {
+            if ($record['blocked_until'] > $now) {
+                $retryAfter = $record['blocked_until'] - $now;
+                header("Retry-After: {$retryAfter}");
+                http_response_code(429);
+                echo json_encode([
+                    'error' => 'Too many requests. Security rate limit exceeded. Please try again later.',
+                    'retry_after' => $retryAfter
+                ]);
+                exit;
+            }
+
+            if ($now - $record['first_hit'] > $windowSeconds) {
+                $update = $pdo->prepare("UPDATE security_rate_limits SET hits = 1, first_hit = ?, last_hit = ?, blocked_until = 0 WHERE id = ?");
+                $update->execute([$now, $now, $key]);
+            } else {
+                $newHits = $record['hits'] + 1;
+                $blockedUntil = 0;
+                if ($newHits > $maxHits) {
+                    $blockedUntil = $now + $blockDurationSeconds;
+                }
+                $update = $pdo->prepare("UPDATE security_rate_limits SET hits = ?, last_hit = ?, blocked_until = ? WHERE id = ?");
+                $update->execute([$newHits, $now, $blockedUntil, $key]);
+
+                if ($blockedUntil > 0) {
+                    header("Retry-After: {$blockDurationSeconds}");
+                    http_response_code(429);
+                    echo json_encode([
+                        'error' => 'Too many requests. Security rate limit exceeded. Please try again later.',
+                        'retry_after' => $blockDurationSeconds
+                    ]);
+                    exit;
+                }
+            }
+        } else {
+            $insert = $pdo->prepare("INSERT INTO security_rate_limits (id, action, ip_address, identifier, hits, first_hit, last_hit, blocked_until) VALUES (?, ?, ?, ?, 1, ?, ?, 0)");
+            $insert->execute([$key, $action, $ip, $identifier, $now, $now]);
+        }
+    } catch (Exception $e) {
+        // Fail open if table error occurs so legitimate traffic is not halted
+    }
+}
+
+function clearRateLimit($pdo, $action, $identifier) {
+    if (!$pdo) return;
+    try {
+        $key = hash('sha256', $action . ':' . strtolower(trim($identifier)));
+        $stmt = $pdo->prepare("DELETE FROM security_rate_limits WHERE id = ?");
+        $stmt->execute([$key]);
+    } catch (Exception $e) {}
+}
+
 function getAuthUser($pdo) {
     $token = getBearerToken();
     if (!$token) return null;
@@ -152,10 +239,21 @@ function getAuthUser($pdo) {
 $action = $_GET['action'] ?? '';
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
 
+// Global API rate limit: Max 120 requests per minute per IP
+checkRateLimit($pdo, 'api_global', getClientIp(), 120, 60, 60);
+
 // 1. LOGIN (POST)
 if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim(strtolower($input['email'] ?? ''));
     $password = $input['password'] ?? '';
+
+    // Enforce brute-force & credential stuffing defense:
+    // Max 10 attempts per 5 minutes per IP (15-min block)
+    checkRateLimit($pdo, 'login_ip', getClientIp(), 10, 300, 900);
+    // Max 5 attempts per 5 minutes per target account (15-min block)
+    if (!empty($email)) {
+        checkRateLimit($pdo, 'login_account', $email, 5, 300, 900);
+    }
 
     if (empty($email) || empty($password)) {
         http_response_code(400);
@@ -186,6 +284,10 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'Invalid email or password']);
         exit;
     }
+
+    // Clear failed login counters upon successful authentication
+    clearRateLimit($pdo, 'login_ip', getClientIp());
+    clearRateLimit($pdo, 'login_account', $email);
 
     $token = bin2hex(random_bytes(32));
     $expiresAt = date('Y-m-d H:i:s', time() + (30 * 86400)); // 30 days
@@ -240,8 +342,12 @@ if ($action === 'logout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 4. FORGOT PASSWORD (POST)
 if ($action === 'forgot-password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Throttle forgot password requests: max 5 requests per hour per IP
+    checkRateLimit($pdo, 'forgot_pw_ip', getClientIp(), 5, 3600, 3600);
     $email = trim(strtolower($input['email'] ?? ''));
     if (!empty($email)) {
+        // Max 3 requests per hour per target email
+        checkRateLimit($pdo, 'forgot_pw_account', $email, 3, 3600, 3600);
         $stmt = $pdo->prepare("SELECT id, email, full_name FROM admin_users WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
@@ -281,6 +387,8 @@ if ($action === 'forgot-password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 5. RESET PASSWORD (POST)
 if ($action === 'reset-password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Throttle password reset submissions: max 10 attempts per hour per IP
+    checkRateLimit($pdo, 'reset_pw_ip', getClientIp(), 10, 3600, 1800);
     $token = trim($input['token'] ?? '');
     $newPassword = $input['password'] ?? '';
 
