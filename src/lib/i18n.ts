@@ -111,7 +111,7 @@ const en: SiteContent = {
     aboutTitle1: "About",
     aboutTitleGold: "MA GROUP",
     aboutP1:
-      "MA GROUP supplies premium-quality fresh and frozen produce to key markets across Europe, the Middle East, Africa, and Asia. We are committed to strict food safety, international compliance, and client satisfaction.",
+      "At MA GROUP, we are committed to delivering Egyptian produce of the highest quality standards, honoring its prestigious standing and fulfilling the aspirations of our clients worldwide. We believe in sustainable partnerships built on trust and credibility, and we strive to fulfill our clients' requirements with efficiency and professionalism.",
     aboutP2:
       "With years of experience and strict quality control standards, we ensure every shipment meets international export requirements.",
     iso: "Premium Quality",
@@ -251,7 +251,7 @@ const ar: SiteContent = {
     aboutTitle1: "عن",
     aboutTitleGold: "MA GROUP",
     aboutP1:
-      "تعمل شركة MA GROUP للتصدير على توريد الفواكه والخضروات الطازجة والمجمدة إلى كبار المستوردين في أوروبا والشرق الأوسط وأفريقيا وآسيا، بالتزام كامل بالجودة وسلامة الغذاء والموثوقية.",
+      "في MA GROUP، نحرص على تقديم منتجات مصرية بأعلى معايير الجودة، بما يليق بمكانتها ويلبي تطلعات عملائنا حول العالم. نؤمن بالشراكات المستدامة القائمة على الثقة والمصداقية، ونعمل على تلبية طلبات عملائنا بكفاءة واحترافية.",
     aboutP2:
       "وبفضل سنوات من الخبرة ومعايير صارمة لضبط الجودة، نضمن مطابقة كل شحنة لمتطلبات التصدير الدولية.",
     iso: "جودة فاخرة",
@@ -391,7 +391,7 @@ const zh: SiteContent = {
     aboutTitle1: "走进",
     aboutTitleGold: "MA GROUP",
     aboutP1:
-      "MA GROUP 专注于向欧洲、中东、非洲及亚洲的核心国际市场供应特级品质的新鲜与冷冻果蔬。我们严格遵守国际食品安全规范与出口检验检疫标准，以诚信和品质赢得全球客户信赖。",
+      "在 MA GROUP，我们致力于提供符合最高质量标准的埃及优质农产品，彰显其卓越地位，满足全球客户的期望。我们坚信建立在信任与诚信基础上的可持续合作伙伴关系，并以高效与专业的水准竭诚满足客户的各项采购需求。",
     aboutP2:
       "依托多年农产品出口积淀与全流程质量控制体系，我们确保每一批出口货运均达到严苛的国际品质和装载标准。",
     iso: "特级品质",

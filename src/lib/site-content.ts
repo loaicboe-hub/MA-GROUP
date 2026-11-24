@@ -19,7 +19,7 @@ export type SectionContent = {
   image?: string;
 };
 
-const CACHE_KEY = "magroup_site_content_v2";
+const CACHE_KEY = "magroup_site_content_v3";
 
 export const defaultSectionsContent: Record<string, SectionContent> = {
   home: {
@@ -46,9 +46,9 @@ export const defaultSectionsContent: Record<string, SectionContent> = {
     subtitle_en: "Rooted in Quality, Exporting Across Continents",
     subtitle_ar: "متجذرون في الجودة، نصدّر عبر القارات",
     subtitle_zh: "深耕卓越品质 · 贯通四大洲贸易",
-    paragraph_en: "At MA GROUP, we take pride in bridging fertile Egyptian lands with major markets in Europe, the Middle East, Africa, and Asia. We specialize in sourcing, grading, packing, and exporting the finest agricultural produce.",
-    paragraph_ar: "في مجموعة إم إيه، نفخر بربط أخصب الأراضي الزراعية المصرية بكبرى الأسواق في أوروبا والشرق الأوسط وأفريقيا وآسيا. نتخصص في فرز وتعبئة وتصدير أرقى المحاصيل الزراعية الطازجة والمجمدة.",
-    paragraph_zh: "在 MA GROUP，我们自豪于将埃及丰饶沃土与欧洲、中东、非洲及亚洲的国际核心口岸紧密相连。我们专注于优质特级农产品的产地直采、精密分级、高标包装与冷链出口。",
+    paragraph_en: "At MA GROUP, we are committed to delivering Egyptian produce of the highest quality standards, honoring its prestigious standing and fulfilling the aspirations of our clients worldwide. We believe in sustainable partnerships built on trust and credibility, and we strive to fulfill our clients' requirements with efficiency and professionalism.",
+    paragraph_ar: "في MA GROUP، نحرص على تقديم منتجات مصرية بأعلى معايير الجودة، بما يليق بمكانتها ويلبي تطلعات عملائنا حول العالم. نؤمن بالشراكات المستدامة القائمة على الثقة والمصداقية، ونعمل على تلبية طلبات عملائنا بكفاءة واحترافية.",
+    paragraph_zh: "在 MA GROUP，我们致力于提供符合最高质量标准的埃及优质农产品，彰显其卓越地位，满足全球客户的期望。我们坚信建立在信任与诚信基础上的可持续合作伙伴关系，并以高效与专业的水准竭诚满足客户的各项采购需求。",
     button_en: "Learn More",
     button_ar: "اعرف المزيد",
     button_zh: "了解详情",
