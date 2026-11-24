@@ -514,14 +514,7 @@ function Index() {
             <div className="relative lg:col-span-7 lg:-mr-6 xl:-mr-16">
               <div className="absolute -inset-4 rounded-3xl gradient-primary opacity-20 blur-2xl" />
               <div className="relative overflow-hidden rounded-3xl shadow-[var(--shadow-soft)]">
-                {sectionImages.about ? (
-                  <img
-                    src={sectionImages.about}
-                    alt="About MA GROUP"
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-                  />
-                ) : aboutVideo ? (
+                {aboutVideo ? (
                   <video
                     key={aboutVideo}
                     src={aboutVideo}
@@ -532,11 +525,17 @@ function Index() {
                     controls
                     controlsList="nodownload"
                     preload="metadata"
-                    poster={farm}
+                    poster={sectionImages.about || farm}
                     aria-label="About MA GROUP"
                     className="aspect-video h-full w-full bg-black object-cover"
                   />
-
+                ) : sectionImages.about ? (
+                  <img
+                    src={sectionImages.about}
+                    alt="About MA GROUP"
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                  />
                 ) : (
                   <img
                     src={farm}

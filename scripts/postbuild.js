@@ -139,10 +139,16 @@ function generateIndexHtml() {
 const htaccessContent = `<IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  RewriteRule ^api/about-video/?$ /api/about-video.php [L,QSA]
   RewriteRule ^index\\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType video/mp4 .mp4
+  AddType video/webm .webm
 </IfModule>
 
 <IfModule mod_headers.c>

@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS `site_settings` (
   `phone` VARCHAR(100) NOT NULL DEFAULT '',
   `email` VARCHAR(255) NOT NULL DEFAULT '',
   `whatsapp` VARCHAR(100) NOT NULL DEFAULT '',
+  `about_video_url` TEXT DEFAULT NULL,
   `address` TEXT DEFAULT NULL,
   `maps_url` TEXT DEFAULT NULL,
   `facebook` TEXT DEFAULT NULL,
