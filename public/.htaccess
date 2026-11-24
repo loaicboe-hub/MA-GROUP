@@ -1,18 +1,35 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Pass Authorization header to PHP
+  RewriteCond %{HTTP:Authorization} ^(.*)
+  RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+  # Direct API routing
   RewriteRule ^api/about-video/?$ /api/about-video.php [L,QSA]
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+  RewriteRule ^api/auth/?$ /api/auth.php [L,QSA]
+
+  # Never rewrite physical files or directories
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Allow direct access to uploads directory
+  RewriteRule ^uploads/ - [L]
+
+  # SPA fallback for all other routes
+  RewriteRule ^ index.html [L]
 </IfModule>
 
 <IfModule mod_mime.c>
   AddType video/mp4 .mp4
   AddType video/webm .webm
+  AddType video/ogg .ogv
+  AddType video/quicktime .mov
 </IfModule>
 
 <IfModule mod_headers.c>
+  Header set Accept-Ranges bytes
   Header set X-Content-Type-Options "nosniff"
 </IfModule>

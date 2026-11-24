@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Diamond, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-
+import { Loader2 } from "lucide-react";
+import { toast, Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,18 +15,7 @@ export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { title: "Reset your password | MA GROUP" },
-      {
-        name: "description",
-        content: "Choose a new password for your MA GROUP admin account.",
-      },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Reset your password | MA GROUP" },
-      {
-        property: "og:description",
-        content: "Choose a new password for your MA GROUP admin account.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -49,8 +37,17 @@ function ResetPasswordPage() {
       return;
     }
 
+    const token = typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("token") || ""
+      : "";
+
+    if (!token) {
+      toast.error("Invalid or missing reset token. Please request a new link.");
+      return;
+    }
+
     setSaving(true);
-    const err = await updatePassword(password);
+    const err = await updatePassword(password, token);
     setSaving(false);
 
     if (err) {
@@ -59,7 +56,9 @@ function ResetPasswordPage() {
     }
 
     toast.success("Password updated successfully. Please sign in.");
-    navigate({ to: "/admin/login" });
+    setTimeout(() => {
+      navigate({ to: "/admin/login" });
+    }, 1500);
   };
 
   return (
@@ -103,25 +102,20 @@ function ResetPasswordPage() {
                   autoComplete="new-password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Repeat your new password"
+                  placeholder="Repeat new password"
                   required
                 />
               </div>
 
               <Button type="submit" className="w-full" disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update password"
-                )}
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update password
               </Button>
             </form>
           </CardContent>
         </Card>
       </div>
+      <Toaster />
     </div>
   );
 }

@@ -1,5 +1,5 @@
-// Standalone Admin Authentication for MA GROUP.
-// Completely local and independent — zero external backend dependencies.
+// Persistent Server-Side Admin Authentication for MA GROUP.
+// Connects to /api/auth backed by Hostinger MySQL database.
 
 export type AdminSession = {
   userId: string;
@@ -9,187 +9,123 @@ export type AdminSession = {
   isSuper?: boolean;
 };
 
-export type LocalAdminUser = {
-  id: string;
-  email: string;
-  password: string;
-  fullName: string;
-  isSuperAdmin: boolean;
-  isAdmin: boolean;
-  createdAt: string;
-};
+const TOKEN_KEY = "magroup_admin_token";
+const SESSION_CACHE_KEY = "magroup_admin_session_cache";
 
-// Configurable master administrator
-export const MASTER_ADMIN = {
-  id: "super-admin-master",
-  email: "",
-  password: "",
-  fullName: "MA GROUP Administrator",
-  isSuperAdmin: true,
-  isAdmin: true,
-};
-
-const SESSION_KEY = "magroup_admin_session_v1";
-const USERS_KEY = "magroup_admin_users_store_v1";
-
-export function getStoredLocalUsers(): LocalAdminUser[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(USERS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+export function getAdminToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
 }
 
-export function saveStoredLocalUsers(users: LocalAdminUser[]) {
+export function setAdminToken(token: string | null) {
   if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  } catch {
-    // Ignore quota errors
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(SESSION_CACHE_KEY);
   }
 }
 
 export async function signIn(email: string, password: string): Promise<string | null> {
-  const normEmail = email.trim().toLowerCase();
-  const trimmedPass = password.trim();
+  try {
+    const res = await fetch("/api/auth?action=login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+    });
 
-  // 1. Check Master Super Admin (only if configured with non-empty credentials)
-  if (MASTER_ADMIN.email && normEmail === MASTER_ADMIN.email && trimmedPass === MASTER_ADMIN.password) {
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return data.error || "Invalid email or password";
+    }
+
+    setAdminToken(data.token);
     if (typeof window !== "undefined") {
-      localStorage.setItem(
-        SESSION_KEY,
-        JSON.stringify({
-          userId: MASTER_ADMIN.id,
-          email: MASTER_ADMIN.email,
-          fullName: MASTER_ADMIN.fullName,
-          isAdmin: true,
-          isSuper: true,
-        }),
-      );
+      localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(data.user));
     }
     return null;
+  } catch (err: any) {
+    return err.message || "Failed to communicate with authentication server";
   }
+}
 
-  // 2. Check local users store
-  const localUsers = getStoredLocalUsers();
-  const localMatch = localUsers.find(
-    (u) => u.email.toLowerCase() === normEmail && u.password === trimmedPass,
-  );
-  if (localMatch) {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(
-        SESSION_KEY,
-        JSON.stringify({
-          userId: localMatch.id,
-          email: localMatch.email,
-          fullName: localMatch.fullName,
-          isAdmin: true,
-          isSuper: localMatch.isSuperAdmin,
-        }),
-      );
+export async function signUp(_email: string, _password: string, _fullName: string): Promise<string | null> {
+  return "Public registration is disabled. Please contact your system administrator.";
+}
+
+export async function signOut(): Promise<void> {
+  const token = getAdminToken();
+  if (token) {
+    try {
+      await fetch("/api/auth?action=logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch {
+      // Ignore network errors on logout
     }
-    return null;
   }
-
-  return "Invalid email or password";
-}
-
-export async function signUp(email: string, password: string, fullName: string): Promise<string | null> {
-  const normEmail = email.trim().toLowerCase();
-  if (password.length < 10) {
-    return "Password must be at least 10 characters";
-  }
-
-  const currentUsers = getStoredLocalUsers();
-  const exists = currentUsers.some((u) => u.email.toLowerCase() === normEmail);
-  if (exists) {
-    return "An account with this email already exists.";
-  }
-
-  const isFirstUser = currentUsers.length === 0;
-  const newLocalUser: LocalAdminUser = {
-    id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    email: normEmail,
-    password,
-    fullName: fullName.trim() || normEmail,
-    isSuperAdmin: isFirstUser,
-    isAdmin: true,
-    createdAt: new Date().toISOString(),
-  };
-
-  currentUsers.push(newLocalUser);
-  saveStoredLocalUsers(currentUsers);
-
-  if (typeof window !== "undefined") {
-    localStorage.setItem(
-      SESSION_KEY,
-      JSON.stringify({
-        userId: newLocalUser.id,
-        email: newLocalUser.email,
-        fullName: newLocalUser.fullName,
-        isAdmin: true,
-        isSuper: newLocalUser.isSuperAdmin,
-      }),
-    );
-  }
-
-  return null;
-}
-
-export async function signOut() {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(SESSION_KEY);
-  }
+  setAdminToken(null);
 }
 
 export async function getAdminSession(): Promise<AdminSession | null> {
   if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem(SESSION_KEY);
-  if (!raw) return null;
+  const token = getAdminToken();
+  if (!token) return null;
+
   try {
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.email) {
-      return {
-        userId: parsed.userId || parsed.email,
-        email: parsed.email,
-        fullName: parsed.fullName,
-        isAdmin: true,
-        isSuper: Boolean(parsed.isSuper),
-      };
+    const res = await fetch("/api/auth?action=session", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      setAdminToken(null);
+      return null;
     }
-  } catch {
+    const data = await res.json();
+    if (data.authenticated && data.session) {
+      localStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(data.session));
+      return data.session;
+    }
+    setAdminToken(null);
     return null;
+  } catch {
+    // If offline / network error, return cached session if available
+    const cached = localStorage.getItem(SESSION_CACHE_KEY);
+    return cached ? JSON.parse(cached) : null;
   }
-  return null;
 }
 
 export async function requestPasswordReset(email: string): Promise<string | null> {
-  const normEmail = email.trim().toLowerCase();
-  const users = getStoredLocalUsers();
-  const found = users.some((u) => u.email.toLowerCase() === normEmail);
-  if (!found) {
-    return "No account found with this email address.";
+  try {
+    const res = await fetch("/api/auth?action=forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    });
+    const data = await res.json();
+    return data.error || null;
+  } catch (err: any) {
+    return err.message || "Failed to send reset link";
   }
-  return null;
 }
 
-export async function updatePassword(password: string): Promise<string | null> {
-  if (typeof window === "undefined") return null;
-  const sessionRaw = localStorage.getItem(SESSION_KEY);
-  if (sessionRaw) {
-    try {
-      const s = JSON.parse(sessionRaw);
-      const users = getStoredLocalUsers();
-      const found = users.find((u) => u.email.toLowerCase() === s.email?.toLowerCase());
-      if (found) {
-        found.password = password;
-        saveStoredLocalUsers(users);
-      }
-    } catch {
-      // Ignore
+export async function updatePassword(password: string, token: string): Promise<string | null> {
+  try {
+    const res = await fetch("/api/auth?action=reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return data.error || "Failed to reset password";
     }
+    return null;
+  } catch (err: any) {
+    return err.message || "Failed to update password";
   }
-  return null;
 }
