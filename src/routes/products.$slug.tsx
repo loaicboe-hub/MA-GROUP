@@ -6,6 +6,7 @@ import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { useLang, initLang } from "@/lib/i18n";
 import { getProduct, SPEC_LABELS, PAGE_UI, type ProductSpecs } from "@/lib/products-catalog";
 import { getCachedLogoUrl, getLogoUrl } from "@/lib/admin-branding";
+import { LanguageSwitcher } from "./index";
 import {
   getProductBySlug,
   listPublishedProducts,
@@ -119,16 +120,22 @@ function ProductDetail() {
   }, [lightbox]);
 
   if (loading) {
-    return <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">
+        {lang === "ar" ? "جاري التحميل..." : lang === "zh" ? "加载中..." : "Loading…"}
+      </div>
+    );
   }
 
   if (!product || !data) {
     return (
       <div className="grid min-h-screen place-items-center bg-background p-6 text-center">
         <div>
-          <h1 className="font-display text-2xl font-bold text-primary">Product not found</h1>
+          <h1 className="font-display text-2xl font-bold text-primary">
+            {lang === "ar" ? "المنتج غير موجود" : lang === "zh" ? "未找到该产品" : "Product not found"}
+          </h1>
           <Link to="/" hash="products" className="mt-4 inline-block text-sm font-semibold text-fresh underline">
-            Back to products
+            {lang === "ar" ? "العودة للمنتجات" : lang === "zh" ? "返回产品列表" : "Back to products"}
           </Link>
         </div>
       </div>
@@ -165,13 +172,16 @@ function ProductDetail() {
               <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{c.brandSub}</div>
             </div>
           </Link>
-          <Link
-            to="/"
-            hash="products"
-            className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-secondary"
-          >
-            {t.back}
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher compact />
+            <Link
+              to="/"
+              hash="products"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-secondary"
+            >
+              {t.back}
+            </Link>
+          </div>
         </div>
       </header>
       <div className="relative h-[60px] overflow-hidden md:h-[90px]">
@@ -303,14 +313,16 @@ function ProductDetail() {
               href={`https://wa.me/201030185757?text=${encodeURIComponent(
                 lang === "ar"
                   ? `مرحباً MA GROUP، أود الاستفسار عن تصدير: ${data.name}`
-                  : `Hello MA GROUP, I would like to inquire about exporting: ${data.name}`
+                  : lang === "zh"
+                    ? `您好 MA GROUP，我想咨询出口产品采购：${data.name}`
+                    : `Hello MA GROUP, I would like to inquire about exporting: ${data.name}`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:bg-[#20ba5a]"
             >
               <WhatsAppIcon className="h-4 w-4 fill-current" />
-              {lang === "ar" ? "طلب عبر واتساب" : "Inquire on WhatsApp"}
+              {lang === "ar" ? "طلب عبر واتساب" : lang === "zh" ? "WhatsApp 咨询采购" : "Inquire on WhatsApp"}
             </a>
           </div>
         </div>

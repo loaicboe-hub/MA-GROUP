@@ -22,6 +22,7 @@ export function SplashScreen() {
   const [logo, setLogo] = useState<string | null>(() => getCachedLogoUrl());
   const [bg, setBg] = useState("#ffffff");
   const [brand, setBrand] = useState("MA GROUP");
+  const [lang, setLangState] = useState<string>("en");
 
   // Sample the logo's own corner pixel so the splash background matches it exactly.
   function syncBackground(img: HTMLImageElement) {
@@ -41,6 +42,12 @@ export function SplashScreen() {
   }
 
   useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("fd_lang");
+      if (stored) setLangState(stored);
+    } catch {
+      /* ignore */
+    }
     getLogoUrl().then((u) => setLogo((prev) => (u && u !== prev ? u : prev))).catch(() => undefined);
 
     loadSiteSettings()
@@ -164,7 +171,7 @@ export function SplashScreen() {
               transition={{ duration: 0.3 }}
               className="absolute bottom-8 right-6 rounded-full border border-border px-4 py-2 text-xs font-medium tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground sm:bottom-10 sm:right-10"
             >
-              SKIP
+              {lang === "ar" ? "تخطي" : lang === "zh" ? "跳过" : "SKIP"}
             </motion.button>
           )}
         </motion.div>

@@ -24,6 +24,7 @@ import {
   type NewsArticle,
 } from "@/lib/news";
 import { toast } from "sonner";
+import { LanguageSwitcher } from "./index";
 
 export const Route = createFileRoute("/news/$slug")({
   head: () => ({
@@ -68,6 +69,17 @@ const UI = {
     copied: "تم نسخ الرابط",
     readMore: "اقرأ المزيد",
   },
+  zh: {
+    back: "返回新闻列表",
+    published: "发布日期",
+    updated: "最近更新",
+    share: "分享文章",
+    related: "相关资讯",
+    gallery: "图集",
+    notFound: "未找到相关文章",
+    copied: "已复制文章链接",
+    readMore: "阅读更多",
+  },
 } as const;
 
 function NewsDetail() {
@@ -101,8 +113,16 @@ function NewsDetail() {
     };
   }, [slug]);
 
-  const title = article ? (lang === "ar" && article.title_ar) || article.title : "";
-  const content = article ? (lang === "ar" && article.content_ar) || article.content : "";
+  const title = article
+    ? (lang === "ar" && article.title_ar) ||
+    (lang === "zh" && article.title_zh) ||
+    article.title
+    : "";
+  const content = article
+    ? (lang === "ar" && article.content_ar) ||
+    (lang === "zh" && article.content_zh) ||
+    article.content
+    : "";
 
   useEffect(() => {
     if (title) document.title = `${title} | MA GROUP`;
@@ -143,9 +163,12 @@ function NewsDetail() {
           <Link to="/" aria-label="MA GROUP home">
             <BrandMark />
           </Link>
-          <Link to="/news" className="text-sm font-semibold text-fresh hover:underline">
-            {t.back}
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher compact />
+            <Link to="/news" className="text-sm font-semibold text-fresh hover:underline">
+              {t.back}
+            </Link>
+          </div>
         </div>
       </header>
       <div className="relative h-[60px] overflow-hidden md:h-[90px]">
@@ -300,7 +323,10 @@ function NewsDetail() {
             <h2 className="font-display text-2xl font-bold text-primary">{t.related}</h2>
             <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((item) => {
-                const rTitle = (lang === "ar" && item.title_ar) || item.title;
+                const rTitle =
+                  (lang === "ar" && item.title_ar) ||
+                  (lang === "zh" && item.title_zh) ||
+                  item.title;
                 return (
                   <article
                     key={item.id}

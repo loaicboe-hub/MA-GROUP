@@ -6,6 +6,7 @@ import { ArrowRight, ArrowLeft, CalendarDays, User, Newspaper } from "lucide-rea
 import { useLang, initLang } from "@/lib/i18n";
 import { listPublishedNews, formatDate, type NewsArticle } from "@/lib/news";
 import { getSectionImageUrl } from "@/lib/section-image";
+import { LanguageSwitcher } from "./index";
 
 export const Route = createFileRoute("/news/")({
   head: () => {
@@ -49,6 +50,16 @@ const UI = {
     back: "العودة إلى الصفحة الرئيسية",
     all: "الكل",
   },
+  zh: {
+    eyebrow: "新闻中心",
+    title: "公司动态",
+    sub: "MA GROUP 公司公告、全球出口资讯及产季动态。",
+    readMore: "阅读全文",
+    loadMore: "加载更多",
+    empty: "暂无发布的资讯文章。",
+    back: "返回首页",
+    all: "全部",
+  },
 } as const;
 
 function NewsList() {
@@ -88,9 +99,12 @@ function NewsList() {
           <Link to="/" aria-label="MA GROUP home">
             <BrandMark />
           </Link>
-          <Link to="/" className="text-sm font-semibold text-fresh hover:underline">
-            {t.back}
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher compact />
+            <Link to="/" className="text-sm font-semibold text-fresh hover:underline">
+              {t.back}
+            </Link>
+          </div>
         </div>
       </header>
       <div className="relative h-[60px] overflow-hidden md:h-[90px]">
@@ -155,8 +169,14 @@ function NewsList() {
           <>
             <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.slice(0, visible).map((item) => {
-                const title = (lang === "ar" && item.title_ar) || item.title;
-                const excerpt = (lang === "ar" && item.excerpt_ar) || item.excerpt;
+                const title =
+                  (lang === "ar" && item.title_ar) ||
+                  (lang === "zh" && item.title_zh) ||
+                  item.title;
+                const excerpt =
+                  (lang === "ar" && item.excerpt_ar) ||
+                  (lang === "zh" && item.excerpt_zh) ||
+                  item.excerpt;
                 return (
                   <article
                     key={item.id}

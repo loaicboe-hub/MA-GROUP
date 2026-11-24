@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useLang } from "@/lib/i18n";
 
 type Dest = { x: number; y: number; label?: string; delay: number };
 
@@ -71,7 +72,15 @@ function arcPath(a: { x: number; y: number }, b: { x: number; y: number }) {
 }
 
 export default function WorldMapRoutes({ labels = [] as string[] }: { labels?: string[] }) {
+  const { lang } = useLang();
   const allLandmassD = useMemo(() => GEOGRAPHIC_LANDMASSES.join(" "), []);
+  const egyptLabel = lang === "ar" ? "مصر" : lang === "zh" ? "埃及" : "EGYPT";
+  const routesLabel =
+    lang === "ar"
+      ? "مسارات التصدير العالمية"
+      : lang === "zh"
+        ? "全球出口航线"
+        : "GLOBAL EXPORT ROUTES";
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl bg-[#091C12]">
@@ -260,7 +269,7 @@ export default function WorldMapRoutes({ labels = [] as string[] }: { labels?: s
             fill="#FDE047"
             style={{ font: "700 10px Inter, sans-serif", letterSpacing: "0.15em" }}
           >
-            EGYPT
+            {egyptLabel}
           </text>
         </g>
 
@@ -320,7 +329,7 @@ export default function WorldMapRoutes({ labels = [] as string[] }: { labels?: s
             fill="#A7F3D0"
             style={{ font: "600 9.5px Inter, sans-serif", letterSpacing: "0.05em" }}
           >
-            GLOBAL EXPORT ROUTES
+            {routesLabel}
           </text>
         </g>
       </svg>

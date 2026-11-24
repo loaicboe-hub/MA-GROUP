@@ -118,7 +118,7 @@ const certIcons = [BadgeCheck, ShieldCheck, Globe2, Award];
 const badgeIcons = [Award, BadgeCheck, Globe2];
 const contactIcons = [Mail, Phone, MapPin];
 
-function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
+export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
   const { lang, setLang, c } = useLang();
   return (
     <div
@@ -129,7 +129,7 @@ function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
           : "border-white/25 bg-white/10 backdrop-blur-md"
       }`}
     >
-      {(["en", "ar"] as const).map((l) => (
+      {(["en", "ar", "zh"] as const).map((l) => (
         <button
           key={l}
           type="button"
@@ -143,7 +143,7 @@ function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
                 : "text-white/80 hover:text-white"
           }`}
         >
-          {l === "en" ? "EN" : "ع"}
+          {l === "en" ? "EN" : l === "ar" ? "ع" : "中文"}
         </button>
       ))}
     </div>
@@ -309,7 +309,7 @@ function Index() {
                 scrolled ? "text-foreground hover:text-fresh" : "text-white/90 hover:text-gold"
               }`}
             >
-              {lang === "ar" ? "أخبارنا" : "Our News"}
+              {lang === "ar" ? "أخبارنا" : lang === "zh" ? "公司动态" : "Our News"}
             </Link>
           </nav>
 
@@ -353,7 +353,7 @@ function Index() {
                 onClick={() => setMenuOpen(false)}
                 className="rounded-xl px-4 py-3 text-base font-semibold text-foreground transition-colors hover:bg-fresh/10"
               >
-                {lang === "ar" ? "أخبارنا" : "Our News"}
+                {lang === "ar" ? "أخبارنا" : lang === "zh" ? "公司动态" : "Our News"}
               </Link>
 
               {/* Direct Quick Contact for Mobile Users */}
@@ -362,14 +362,22 @@ function Index() {
                   href={`https://wa.me/201030185757?text=${encodeURIComponent(
                     lang === "ar"
                       ? "مرحباً MA GROUP، أود الاستفسار عن تصدير الحاصلات الزراعية."
-                      : "Hello MA GROUP, I would like to inquire about agricultural export."
+                      : lang === "zh"
+                        ? "您好 MA GROUP，我想咨询农产品出口采购。"
+                        : "Hello MA GROUP, I would like to inquire about agricultural export."
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2.5 rounded-xl bg-[#25D366] px-5 py-3.5 text-center font-bold text-white shadow-md active:scale-95 transition-transform"
                 >
                   <WhatsAppIcon className="h-5 w-5 fill-current" />
-                  <span>{lang === "ar" ? "محادثة واتساب مباشرة" : "Chat on WhatsApp"}</span>
+                  <span>
+                    {lang === "ar"
+                      ? "محادثة واتساب مباشرة"
+                      : lang === "zh"
+                        ? "WhatsApp 在线沟通"
+                        : "Chat on WhatsApp"}
+                  </span>
                 </a>
                 <a
                   href="tel:+201030185757"
@@ -595,11 +603,22 @@ function Index() {
             }
             const ungrouped = list.filter((p) => !activeCategories.some((cat) => cat.id === p.category_id));
             if (ungrouped.length)
-              tabs.push({ id: "other", label: lang === "ar" ? "أخرى" : "Other", items: ungrouped });
+              tabs.push({
+                id: "other",
+                label: lang === "ar" ? "أخرى" : lang === "zh" ? "其他" : "Other",
+                items: ungrouped,
+              });
 
             const allTabs =
               tabs.length > 1
-                ? [{ id: "all", label: lang === "ar" ? "الكل" : "All", items: list }, ...tabs]
+                ? [
+                    {
+                      id: "all",
+                      label: lang === "ar" ? "الكل" : lang === "zh" ? "全部" : "All",
+                      items: list,
+                    },
+                    ...tabs,
+                  ]
                 : tabs;
             const current = allTabs.find((t) => t.id === activeCat) ?? allTabs[0];
 
@@ -987,7 +1006,11 @@ function Index() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-medium text-muted-foreground">
-                      {lang === "ar" ? "الهاتف المباشر" : "Direct Phone"}
+                      {lang === "ar"
+                        ? "الهاتف المباشر"
+                        : lang === "zh"
+                          ? "出口直拨电话"
+                          : "Direct Phone"}
                     </div>
                     <div className="font-semibold text-foreground group-hover:text-primary transition-colors text-base sm:text-lg">
                       {site.phone || "+20 103 018 5757"}
@@ -1006,7 +1029,11 @@ function Index() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-medium text-muted-foreground">
-                      {lang === "ar" ? "البريد الإلكتروني" : "Email Address"}
+                      {lang === "ar"
+                        ? "البريد الإلكتروني"
+                        : lang === "zh"
+                          ? "出口业务邮箱"
+                          : "Email Address"}
                     </div>
                     <div className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm sm:text-base truncate">
                       {site.email || "export@magroup-eg.com"}
@@ -1021,10 +1048,19 @@ function Index() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-medium text-muted-foreground">
-                      {lang === "ar" ? "المقر الرئيسي للتصدير" : "Export Hub"}
+                      {lang === "ar"
+                        ? "المقر الرئيسي للتصدير"
+                        : lang === "zh"
+                          ? "出口运营总部"
+                          : "Export Hub"}
                     </div>
                     <div className="font-semibold text-foreground text-sm sm:text-base">
-                      {site.address || (lang === "ar" ? "جمهورية مصر العربية" : "Cairo, Egypt")}
+                      {site.address ||
+                        (lang === "ar"
+                          ? "جمهورية مصر العربية"
+                          : lang === "zh"
+                            ? "埃及开罗"
+                            : "Cairo, Egypt")}
                     </div>
                   </div>
                 </div>
@@ -1103,11 +1139,13 @@ function Index() {
       </section>
 
       <PartnersCarousel
-        title={lang === "ar" ? "شركاؤنا" : "Our Partners"}
+        title={lang === "ar" ? "شركاؤنا" : lang === "zh" ? "全球合作伙伴" : "Our Partners"}
         subtitle={
           lang === "ar"
             ? "نفخر بالتعاون مع شركاء ومستوردين في أوروبا والشرق الأوسط وأفريقيا وآسيا"
-            : "Proudly partnering with trusted importers across Europe, the Middle East, Africa, and Asia"
+            : lang === "zh"
+              ? "为欧洲、中东、非洲与亚洲的全球信赖进口商提供高标准合作"
+              : "Proudly partnering with trusted importers across Europe, the Middle East, Africa, and Asia"
         }
       />
 

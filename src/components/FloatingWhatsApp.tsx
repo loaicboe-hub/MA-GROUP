@@ -22,13 +22,15 @@ export function FloatingWhatsApp() {
   const defaultMessage =
     lang === "ar"
       ? "مرحباً MA GROUP، أود الاستفسار عن تصدير الحاصلات الزراعية الطازجة والمجمدة."
-      : "Hello MA GROUP, I am interested in inquiring about exporting fresh and frozen agricultural produce.";
+      : lang === "zh"
+        ? "您好 MA GROUP，我想咨询新鲜和冷冻农产品出口采购。"
+        : "Hello MA GROUP, I am interested in inquiring about exporting fresh and frozen agricultural produce.";
 
   const href = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(defaultMessage)}`;
 
   return (
     <aside
-      aria-label={lang === "ar" ? "تواصل معنا عبر واتساب" : "Chat on WhatsApp"}
+      aria-label={lang === "ar" ? "تواصل معنا عبر واتساب" : lang === "zh" ? "通过 WhatsApp 联系我们" : "Chat on WhatsApp"}
       className="fixed z-50 flex items-center gap-2 pointer-events-auto"
       style={{
         bottom: "max(1.25rem, calc(1.25rem + env(safe-area-inset-bottom)))",
@@ -47,7 +49,13 @@ export function FloatingWhatsApp() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]" />
           </span>
-          <span>{lang === "ar" ? "تواصل معنا عبر واتساب" : "Chat with us on WhatsApp"}</span>
+          <span>
+            {lang === "ar"
+              ? "تواصل معنا عبر واتساب"
+              : lang === "zh"
+                ? "在 WhatsApp 上与我们沟通"
+                : "Chat with us on WhatsApp"}
+          </span>
           <button
             type="button"
             onClick={(e) => {
@@ -81,7 +89,7 @@ export function FloatingWhatsApp() {
 
         {/* Text visible on tablets/desktop, clean compact icon on small mobile */}
         <span className="relative hidden font-bold text-sm tracking-wide sm:inline">
-          {lang === "ar" ? "واتساب" : "WhatsApp"}
+          {lang === "ar" ? "واتساب" : lang === "zh" ? "在线咨询" : "WhatsApp"}
         </span>
 
         {/* Mobile online notification dot */}

@@ -95,9 +95,35 @@ const AR_TEXT: Record<string, string> = {
   "Back to Top": "العودة إلى الأعلى",
 };
 
-export function localizeFooterConfig(cfg: FooterConfig, lang: "en" | "ar"): FooterConfig {
-  if (lang !== "ar") return cfg;
-  const t = (s: string) => AR_TEXT[s] ?? s;
+/* ------------------------------ Chinese labels ---------------------------- */
+
+const ZH_TEXT: Record<string, string> = {
+  // tagline
+  [defaultFooterConfig.tagline]:
+    "出口至欧洲、中东、非洲与亚洲的特级新鲜与冷冻农产品，国际权威认证，品质值得信赖。",
+  // column titles
+  Company: "关于公司",
+  Products: "出口产品",
+  More: "更多服务",
+  // links
+  About: "关于我们",
+  "Why Us": "核心优势",
+  "Export Process": "出口流程",
+  "Global Markets": "全球市场",
+  "Fresh Fruits": "新鲜水果",
+  Vegetables: "新鲜蔬菜",
+  Seasonal: "时令产品",
+  Packaging: "包装标准",
+  Certifications: "国际认证",
+  Contact: "联系我们",
+  "Request Quote": "索取报价",
+  "Back to Top": "返回顶部",
+};
+
+export function localizeFooterConfig(cfg: FooterConfig, lang: "en" | "ar" | "zh"): FooterConfig {
+  if (lang === "en") return cfg;
+  const dict = lang === "ar" ? AR_TEXT : ZH_TEXT;
+  const t = (s: string) => dict[s] ?? s;
   return {
     ...cfg,
     tagline: t(cfg.tagline),
