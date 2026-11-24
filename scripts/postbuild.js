@@ -104,6 +104,16 @@ function generateIndexHtml() {
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&amp;family=Inter:wght@300;400;500;600;700;800&amp;family=Playfair+Display:wght@500;600;700;800;900&amp;display=swap"
     />
+    <script>
+      window.$_TSR = window.$_TSR || {
+        router: { manifest: { routes: {} }, matches: [] },
+        buffer: [],
+        h: function () { this.hydrated = true; },
+        e: function () { this.streamEnded = true; },
+        c: function () {},
+        p: function (s) { if (!this.initialized && this.buffer) { this.buffer.push(s); } else { s(); } },
+      };
+    </script>
     ${cssTag}
     ${preloadTags}
   </head>
@@ -149,10 +159,11 @@ try {
     console.log("✓ Generated .output/public/index.html and .output/public/.htaccess");
   }
 
-  // 2. Ensure dist directory exists and copy .output/public to dist
-  if (!fs.existsSync(distDir)) {
-    fs.mkdirSync(distDir, { recursive: true });
+  // 2. Clean and ensure dist directory exists and copy .output/public to dist
+  if (fs.existsSync(distDir)) {
+    fs.rmSync(distDir, { recursive: true, force: true });
   }
+  fs.mkdirSync(distDir, { recursive: true });
 
   if (fs.existsSync(outputPublicDir)) {
     fs.cpSync(outputPublicDir, distDir, { recursive: true });
