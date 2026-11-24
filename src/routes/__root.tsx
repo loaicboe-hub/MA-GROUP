@@ -1,0 +1,164 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  Outlet,
+  Link,
+  createRootRouteWithContext,
+  useRouter,
+  HeadContent,
+  Scripts,
+} from "@tanstack/react-router";
+import { useEffect, type ReactNode } from "react";
+
+import appCss from "../styles.css?url";
+import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SplashScreen } from "@/components/SplashScreen";
+import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
+
+function NotFoundComponent() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-7xl font-bold text-foreground">404</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          The page you're looking for doesn't exist or has been moved.
+        </p>
+        <div className="mt-6">
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Go home
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+  console.error(error);
+  const router = useRouter();
+  useEffect(() => {
+    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+  }, [error]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          This page didn't load
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Something went wrong on our end. You can try refreshing or head back home.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Try again
+          </button>
+          <a
+            href="/"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Go home
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "MA GROUP | Premium Fresh & Frozen Produce Exporter" },
+      {
+        name: "description",
+        content:
+          "MA GROUP is a leading Egyptian exporter of premium fresh and frozen fruits and vegetables to Europe, the Middle East, Africa, and Asia. Certified export quality and reliable logistics.",
+      },
+      {
+        name: "keywords",
+        content:
+          "Fresh Fruits Export, Fresh Vegetables Export, Frozen Fruits, Frozen Vegetables, IQF Egypt, Egypt Produce Exporter, Europe, Middle East, Africa, Asia",
+      },
+      { name: "author", content: "MA GROUP" },
+      { property: "og:title", content: "MA GROUP | Premium Fresh & Frozen Produce Exporter" },
+      {
+        property: "og:description",
+        content: "Premium fresh & frozen produce exported to Europe, the Middle East, Africa & Asia with certified quality.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:image", content: "/logo.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/logo.png" },
+    ],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800;900&display=swap",
+      },
+    ],
+  }),
+  shellComponent: RootShell,
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
+  errorComponent: ErrorComponent,
+});
+
+function RootShell({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {/* Pre-hydration cover: paints white before any page content is visible. */}
+        <div
+          id="splash-cover"
+          suppressHydrationWarning
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#ffffff",
+            zIndex: 300,
+          }}
+        />
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(window.location.pathname.indexOf('/admin')===0||sessionStorage.getItem('nv_splash_seen')==='1'){var c=document.getElementById('splash-cover');if(c)c.style.display='none';}var raw=localStorage.getItem('nv_logo_cache_v2');var cached=raw&&JSON.parse(raw);var logoSrc=cached&&cached.src;if(logoSrc){var fav=document.querySelector('link[rel~="icon"]');if(fav)fav.href=logoSrc;}var heroSrc=localStorage.getItem('nv_hero_image_cache_v1');var apply=function(root){if(root.nodeType!==1)return;var set=function(el,src){if(src&&el.src!==src)el.src=src;};if(root.matches){if(root.matches('[data-brand-logo]'))set(root,logoSrc);if(root.matches('[data-hero-background]'))set(root,heroSrc);}var logos=root.querySelectorAll?root.querySelectorAll('[data-brand-logo]'):[];for(var i=0;i<logos.length;i++)set(logos[i],logoSrc);var heroes=root.querySelectorAll?root.querySelectorAll('[data-hero-background]'):[];for(var j=0;j<heroes.length;j++)set(heroes[j],heroSrc);};if(logoSrc||heroSrc)new MutationObserver(function(records){for(var i=0;i<records.length;i++){if(records[i].type==='attributes')apply(records[i].target);for(var j=0;j<records[i].addedNodes.length;j++)apply(records[i].addedNodes[j]);}}).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});}catch(e){}setTimeout(function(){var c=document.getElementById('splash-cover');if(c)c.style.display='none';},2100);})();`,
+          }}
+        />
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SplashScreen />
+      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <Outlet />
+      <FloatingWhatsApp />
+    </QueryClientProvider>
+  );
+}
+
