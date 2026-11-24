@@ -100,15 +100,15 @@ CREATE TABLE IF NOT EXISTS `user_permissions` (
 
 CREATE TABLE IF NOT EXISTS `security_rate_limits` (
   `id` VARCHAR(64) NOT NULL PRIMARY KEY,
-  `action` VARCHAR(50) NOT NULL,
+  `action_name` VARCHAR(50) NOT NULL,
   `ip_address` VARCHAR(45) NOT NULL,
   `identifier` VARCHAR(255) NOT NULL DEFAULT '',
   `hits` INT NOT NULL DEFAULT 1,
   `first_hit` INT NOT NULL,
   `last_hit` INT NOT NULL,
   `blocked_until` INT NOT NULL DEFAULT 0,
-  INDEX (`action`, `ip_address`),
-  INDEX (`action`, `identifier`),
+  INDEX (`action_name`, `ip_address`),
+  INDEX (`action_name`, `identifier`),
   INDEX (`blocked_until`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ");
@@ -205,7 +205,7 @@ function checkRateLimit($pdo, $action, $identifier, $maxHits, $windowSeconds, $b
                 }
             }
         } else {
-            $insert = $pdo->prepare("INSERT INTO security_rate_limits (id, action, ip_address, identifier, hits, first_hit, last_hit, blocked_until) VALUES (?, ?, ?, ?, 1, ?, ?, 0)");
+            $insert = $pdo->prepare("INSERT INTO security_rate_limits (id, action_name, ip_address, identifier, hits, first_hit, last_hit, blocked_until) VALUES (?, ?, ?, ?, 1, ?, ?, 0)");
             $insert->execute([$key, $action, $ip, $identifier, $now, $now]);
         }
     } catch (Exception $e) {
