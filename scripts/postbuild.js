@@ -213,7 +213,26 @@ try {
     console.log("✓ Copied all assets from .output/public to dist directory.");
   }
 
-  // 3. Ensure index.html and .htaccess also exist in dist directly
+  // 3. Ensure uploads and api directories are permanently preserved in dist and .output/public
+  const publicUploads = path.join(publicDir, "uploads");
+  const distUploads = path.join(distDir, "uploads");
+  const outputUploads = path.join(outputPublicDir, "uploads");
+  if (fs.existsSync(publicUploads)) {
+    fs.cpSync(publicUploads, distUploads, { recursive: true });
+    fs.cpSync(publicUploads, outputUploads, { recursive: true });
+    console.log("✓ Copied public/uploads to dist/uploads and .output/public/uploads.");
+  }
+
+  const publicApi = path.join(publicDir, "api");
+  const distApi = path.join(distDir, "api");
+  const outputApi = path.join(outputPublicDir, "api");
+  if (fs.existsSync(publicApi)) {
+    fs.cpSync(publicApi, distApi, { recursive: true });
+    fs.cpSync(publicApi, outputApi, { recursive: true });
+    console.log("✓ Copied public/api to dist/api and .output/public/api.");
+  }
+
+  // 4. Ensure index.html and .htaccess also exist in dist directly
   const distHtmlPath = path.join(distDir, "index.html");
   if (!fs.existsSync(distHtmlPath)) {
     const html = generateIndexHtml();
@@ -222,13 +241,13 @@ try {
   fs.writeFileSync(path.join(distDir, ".htaccess"), htaccessContent, "utf8");
   console.log("✓ Verified dist/index.html and dist/.htaccess are present.");
 
-  // 4. Ensure public/.htaccess exists in repo source as well
+  // 5. Ensure public/.htaccess exists in repo source as well
   const publicHtaccess = path.join(publicDir, ".htaccess");
   if (!fs.existsSync(publicHtaccess)) {
     fs.writeFileSync(publicHtaccess, htaccessContent, "utf8");
   }
 
-  // 5. Also mirror .output inside dist/.output in case platform looks for dist/.output
+  // 6. Also mirror .output inside dist/.output in case platform looks for dist/.output
   const distOutputDir = path.join(distDir, ".output");
   if (fs.existsSync(outputDir) && !fs.existsSync(distOutputDir)) {
     fs.cpSync(outputDir, distOutputDir, { recursive: true });
