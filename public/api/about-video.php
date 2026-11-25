@@ -60,7 +60,7 @@ if ($pdo) {
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? ($_POST['action'] ?? '');
 
-// 1. GET: Fetch current about video URL
+// 1. GET: Fetch current about video URL (with auto-heal against deployment wipes)
 if ($method === 'GET') {
     if (!$pdo) {
         echo json_encode(['success' => false, 'error' => 'Database connection failed']);
@@ -71,6 +71,32 @@ if ($method === 'GET') {
         $stmt = $pdo->query("SELECT about_video_url FROM site_settings WHERE id = 'default' LIMIT 1");
         $row = $stmt->fetch();
         $videoUrl = $row && !empty($row['about_video_url']) ? $row['about_video_url'] : null;
+
+        $defaultVideo = '/uploads/videos/about-video-1795535555.mp4';
+        
+        // Auto-heal verification: ensure the file physically exists on the disk
+        if ($videoUrl) {
+            $parsedPath = parse_url($videoUrl, PHP_URL_PATH);
+            $localFile = dirname(__DIR__) . $parsedPath;
+            $persistentDir = dirname(__DIR__, 2) . '/persistent_storage/videos/';
+            $persistentFile = $persistentDir . basename($parsedPath);
+
+            if (!file_exists($localFile)) {
+                // If deleted by Hostinger git deployment, restore immediately from persistent storage outside public_html!
+                if (file_exists($persistentFile)) {
+                    @mkdir(dirname($localFile), 0755, true);
+                    @copy($persistentFile, $localFile);
+                } else {
+                    // Untracked deleted file; heal DB back to bundled permanent video
+                    $videoUrl = $defaultVideo;
+                    $up = $pdo->prepare("UPDATE site_settings SET about_video_url = :def, updated_at = NOW() WHERE id = 'default'");
+                    $up->execute([':def' => $defaultVideo]);
+                }
+            }
+        } else {
+            $videoUrl = $defaultVideo;
+        }
+
         echo json_encode(['success' => true, 'url' => $videoUrl]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -138,6 +164,15 @@ if ($method === 'POST') {
     if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
         echo json_encode(['success' => false, 'error' => 'Failed to save uploaded video to permanent server storage']);
         exit;
+    }
+
+    // Mirror copy into persistent storage outside public_html to permanently survive Git deployments
+    $persistentDir = dirname(__DIR__, 2) . '/persistent_storage/videos/';
+    if (!is_dir($persistentDir)) {
+        @mkdir($persistentDir, 0755, true);
+    }
+    if (is_dir($persistentDir)) {
+        @copy($targetPath, $persistentDir . $uniqueName);
     }
 
     // Construct public URL

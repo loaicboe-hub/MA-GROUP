@@ -528,6 +528,12 @@ function Index() {
                     poster={sectionImages.about || farm}
                     aria-label="About MA GROUP"
                     className="aspect-video h-full w-full bg-black object-cover"
+                    onError={() => {
+                      const fallback = "/uploads/videos/about-video-1795535555.mp4";
+                      if (aboutVideo !== fallback) {
+                        setAboutVideo(fallback);
+                      }
+                    }}
                   />
                 ) : sectionImages.about ? (
                   <img

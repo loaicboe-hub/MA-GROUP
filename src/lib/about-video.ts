@@ -3,6 +3,7 @@
 // Removes temporary blob URL and localStorage dependencies so it works across all devices and incognito mode.
 
 const API_ENDPOINT = '/api/about-video.php';
+const DEFAULT_VIDEO_URL = '/uploads/videos/about-video-1795535555.mp4';
 
 export async function getAboutVideoUrl(): Promise<string | null> {
   try {
@@ -11,12 +12,12 @@ export async function getAboutVideoUrl(): Promise<string | null> {
       headers: { 'Accept': 'application/json' },
       cache: 'no-store'
     });
-    if (!res.ok) return null;
+    if (!res.ok) return DEFAULT_VIDEO_URL;
     const data = await res.json();
-    return data && data.success && data.url ? data.url : null;
+    return data && data.success && data.url ? data.url : DEFAULT_VIDEO_URL;
   } catch (err) {
     console.warn('Failed to fetch persistent about video URL:', err);
-    return null;
+    return DEFAULT_VIDEO_URL;
   }
 }
 
