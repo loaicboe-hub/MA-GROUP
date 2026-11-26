@@ -370,7 +370,7 @@ if ($action === 'forgot-password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                      . "Best regards,\nMA GROUP Security Team";
 
             $headers = "From: MA GROUP <noreply@magroupexport.com>\r\n"
-                     . "Reply-To: export@magroup-eg.com\r\n"
+                     . "Reply-To: info@magroupexport.com\r\n"
                      . "X-Mailer: PHP/" . phpversion();
 
             @mail($user['email'], $subject, $message, $headers);

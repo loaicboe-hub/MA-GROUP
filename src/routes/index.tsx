@@ -1025,7 +1025,7 @@ function Index() {
 
                 {/* Direct Email */}
                 <a
-                  href={`mailto:${site.email || "export@magroup-eg.com"}`}
+                  href={`mailto:${site.email || "info@magroupexport.com"}`}
                   className="flex items-center gap-3.5 p-3 rounded-2xl border border-border/60 bg-card hover:border-fresh/50 hover:bg-fresh/5 transition-all group shadow-sm"
                   dir="ltr"
                 >
@@ -1041,7 +1041,7 @@ function Index() {
                           : "Email Address"}
                     </div>
                     <div className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm sm:text-base truncate">
-                      {site.email || "export@magroup-eg.com"}
+                      {site.email || "info@magroupexport.com"}
                     </div>
                   </div>
                 </a>

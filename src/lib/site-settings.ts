@@ -21,7 +21,7 @@ export type SiteSettings = {
 export const defaultSiteSettings: SiteSettings = {
   companyName: "MA GROUP",
   phone: "+20 103 018 5757",
-  email: "export@magroup-eg.com",
+  email: "info@magroupexport.com",
   whatsapp: "+201030185757",
   address: "Egypt",
   maps: "",

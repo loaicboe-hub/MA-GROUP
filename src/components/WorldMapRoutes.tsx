@@ -18,6 +18,8 @@ const DESTS: Dest[] = [
   { x: 545, y: 235, delay: 3.5 }, // East Africa / Kenya
   { x: 460, y: 215, delay: 4.0 }, // West Africa / Nigeria
   { x: 505, y: 320, delay: 4.5 }, // Southern Africa / South Africa
+  { x: 235, y: 125, delay: 5.0 }, // North America / US East Coast (New York)
+  { x: 285, y: 240, delay: 5.5 }, // South America / Americas (Santos/Brazil)
 ];
 
 // Accurate geographic continent SVG path definitions (Equirectangular / Miller projection, 900x450)
@@ -274,13 +276,14 @@ export default function WorldMapRoutes({ labels = [] as string[] }: { labels?: s
         </g>
 
         {/* Real Geographic Region Labels */}
-        {labels.slice(0, 4).map((l, i) => {
-          // Precise geographic centroids for the 4 primary regions
+        {labels.slice(0, 5).map((l, i) => {
+          // Precise geographic centroids for the 5 primary regions
           const pos = [
             { x: 465, y: 72 },  // Europe
             { x: 595, y: 148 }, // Middle East
             { x: 470, y: 265 }, // Africa
             { x: 715, y: 105 }, // Asia
+            { x: 195, y: 125 }, // Americas / أمريكا
           ][i];
           if (!pos) return null;
           return (
